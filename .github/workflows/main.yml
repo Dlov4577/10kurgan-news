@@ -37,12 +37,25 @@ jobs:
           libssl-dev \
           autoconf \
           libtool \
-          pkg-config
+          pkg-config \
+          openjdk-17-jdk \
+          unzip
     
     - name: Install buildozer
       run: |
         pip install --user buildozer cython
         echo "$HOME/.local/bin" >> $GITHUB_PATH
+    
+    - name: Accept Android Licenses
+      run: |
+        # Создаем папку для лицензий
+        mkdir -p $HOME/.android
+        # Принимаем все лицензии
+        yes | $ANDROID_HOME/tools/bin/sdkmanager --licenses || true
+        # Альтернативный способ
+        mkdir -p $HOME/.android
+        touch $HOME/.android/repositories.cfg
+        echo "y" | $ANDROID_HOME/tools/bin/sdkmanager "build-tools;30.0.3" || true
     
     - name: Build APK
       run: |
@@ -58,11 +71,17 @@ jobs:
         sed -i 's/fullscreen = 0/fullscreen = 0/' buildozer.spec
         sed -i 's/#osx.python_version = 3/osx.python_version = 3/' buildozer.spec
         
+        # Указываем конкретную версию build-tools
+        sed -i 's/#android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
+        sed -i 's/android.build_tools = .*/android.build_tools = 30.0.3/' buildozer.spec
+        sed -i 's/android.api = .*/android.api = 30/' buildozer.spec
+        sed -i 's/android.minapi = .*/android.minapi = 21/' buildozer.spec
+        
         # Сборка
         buildozer android debug
     
     - name: Upload APK
-      uses: actions/upload-artifact@v4  # <--- ИЗМЕНЕНО С v3 НА v4
+      uses: actions/upload-artifact@v4
       with:
         name: kurgan-news-apk
         path: bin/*.apk
