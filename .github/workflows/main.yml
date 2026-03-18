@@ -49,7 +49,7 @@ jobs:
     
     - name: Create buildozer.spec
       run: |
-        # Создаем buildozer.spec с правильными настройками
+        # Создаём buildozer.spec с правильными настройками
         cat > buildozer.spec << 'EOF'
 [app]
 title = Kurgan News
@@ -72,21 +72,18 @@ warn_on_root = 1
 api = 30
 minapi = 21
 ndk = 25b
-ndk_version = 25b
 android.accept_sdk_license = True
 android.sdk = 30
 android.build_tools = 30.0.3
-android.gradle_dependencies = 'com.android.support:support-annotations:28.0.0'
-p4a.branch = develop
 EOF
     
     - name: Accept Android Licenses
       run: |
-        # Устанавливаем SDK Manager
+        # Настройка SDK
         mkdir -p $HOME/.android
         touch $HOME/.android/repositories.cfg
         
-        # Устанавливаем конкретные версии
+        # Принимаем лицензии для нужных компонентов
         echo y | $ANDROID_HOME/tools/bin/sdkmanager "platforms;android-30" || true
         echo y | $ANDROID_HOME/tools/bin/sdkmanager "build-tools;30.0.3" || true
         echo y | $ANDROID_HOME/tools/bin/sdkmanager "platform-tools" || true
@@ -94,11 +91,11 @@ EOF
     
     - name: Build APK
       run: |
-        # Сборка
+        # Запускаем сборку
         buildozer android debug
     
     - name: Upload APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v4   # <--- ИЗМЕНЕНО НА v4
       with:
         name: kurgan-news-apk
         path: bin/*.apk
