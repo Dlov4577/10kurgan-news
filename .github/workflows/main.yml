@@ -1,0 +1,68 @@
+name: Build Kurgan APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          python3-pip \
+          build-essential \
+          git \
+          python3-dev \
+          libsdl2-dev \
+          libsdl2-image-dev \
+          libsdl2-mixer-dev \
+          libsdl2-ttf-dev \
+          zlib1g-dev \
+          libltdl-dev \
+          libffi-dev \
+          libssl-dev \
+          autoconf \
+          libtool \
+          pkg-config
+    
+    - name: Install buildozer
+      run: |
+        pip install --user buildozer cython
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+    
+    - name: Build APK
+      run: |
+        # Создаем buildozer.spec
+        buildozer init
+        
+        # Настраиваем его
+        sed -i 's/title = My Application/title = Kurgan News/' buildozer.spec
+        sed -i 's/package.name = myapp/package.name = kurgan/' buildozer.spec
+        sed -i 's/package.domain = org.test/package.domain = com.kurgan.app/' buildozer.spec
+        sed -i 's/requirements = python3,kivy/requirements = python3,requests,pillow/' buildozer.spec
+        sed -i 's/orientation = portrait/orientation = portrait/' buildozer.spec
+        sed -i 's/fullscreen = 0/fullscreen = 0/' buildozer.spec
+        sed -i 's/#osx.python_version = 3/osx.python_version = 3/' buildozer.spec
+        
+        # Сборка
+        buildozer android debug
+    
+    - name: Upload APK
+      uses: actions/upload-artifact@v4  # <--- ИЗМЕНЕНО С v3 НА v4
+      with:
+        name: kurgan-news-apk
+        path: bin/*.apk
